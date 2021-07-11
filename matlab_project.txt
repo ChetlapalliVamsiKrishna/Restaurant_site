@@ -1,0 +1,63 @@
+[z,Fs] = audioread('C:\Users\Bhanu\Downloads\Before.mpeg');
+sound(z,Fs);
+subplot(2,2,1);
+
+plot(z);
+max(z) % Normalized Amplitude
+title("original Signal");
+xlabel('No of Samples')
+ylabel('Amplitude')
+
+% Frequency Response of the noise Signal
+L = length(z);
+NEFT = 2^nextpow2(L);
+Z_FFT = abs(fft(z,NEFT));
+Freq = Fs/2*linspace(0,1,NEFT/2+1);
+subplot(2,2,2);
+plot(Freq,Z_FFT(1:length(Freq)));title("Frequency Plot of Noise Signal");
+xlabel('Frequency')
+ylabel('Magnitude')
+
+% Creating Filter
+order = 5;
+w_n = [1200 1700]* 2/Fs;
+[b, a] = butter(order, w_n, "bandpass");
+[h, w] = freqz(b,a,1024,Fs);
+subplot(2,2,3);
+plot(w,20*log10(abs(h)));title("The Band Pass Filter");
+
+% Filtering the noise signal
+z_filter = filter(b,a,z);
+
+for i = 1:length(z_filter)
+    if(z_filter(i)>0.6)
+       z_filter(i) = 0.5; 
+    end
+end
+
+% Frequency Response of the Filtered Signal
+L = length(z_filter);
+NEFT = 2^nextpow2(L);
+Z_FFT = abs(fft(z_filter,NEFT));
+Freq = Fs/2*linspace(0,1,NEFT/2+1);
+figure
+plot(Freq,Z_FFT(1:length(Freq)));title("Frequency Plot of Filtered Signal");
+xlabel('Frequency')
+ylabel('Magnitude')
+
+ %sound(z_filter,Fs)
+
+
+
+x = modulate(z_filter,0.49*Fs,Fs, 'am');
+%x = ammod(z, 0.49*Fs, Fs)
+L_modulated = length(x);
+NEFT = 2^nextpow2(L_modulated);
+x_FFT = abs(fft(x,NEFT));
+Freq_mod = 0.49*Fs/2*linspace(0,1,NEFT/2+1);
+figure
+plot(Freq_mod,x_FFT(1:length(Freq_mod)));title("Frequency Plot of Noise Signal");
+xlabel('Frequency')
+ylabel('Magnitude')
+
+%soundsc(x);
